@@ -13,6 +13,13 @@ function bind() {
   el('merge').addEventListener('click', () => void run('merge'));
   el('save').addEventListener('click', () => void save());
   el('test').addEventListener('click', () => void test());
+  // Branching from a page is more convincing when the tree is on screen moving as you do it.
+  el('tree').addEventListener('click', () => {
+    void (async () => {
+      const { baseUrl } = await settings();
+      await chrome.tabs.create({ url: baseUrl });
+    })();
+  });
 }
 
 function setStatus(message) {
