@@ -19,10 +19,12 @@ interface Evidence {
   avgCostUsd: number;
 }
 
-const COL = 230;
-const ROW = 96;
-const NODE_W = 190;
-const NODE_H = 62;
+// Sized for a projector at the back of a room, not for a laptop screen. Every value here was
+// picked so the smallest glyph stays legible after the room lights come up.
+const COL = 300;
+const ROW = 124;
+const NODE_W = 260;
+const NODE_H = 86;
 
 export default function LiveTree({ userId }: { userId: string }) {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -96,7 +98,7 @@ export default function LiveTree({ userId }: { userId: string }) {
   }, [branches, memory]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: 24 }}>
       <section>
         <Header live={live} totals={totals} />
         <div
@@ -106,7 +108,7 @@ export default function LiveTree({ userId }: { userId: string }) {
             borderRadius: 12,
             padding: 16,
             overflowX: 'auto',
-            minHeight: 420,
+            minHeight: 520,
           }}
         >
           {layout.nodes.length === 0 ? (
@@ -123,8 +125,8 @@ export default function LiveTree({ userId }: { userId: string }) {
                   key={edge.key}
                   d={edge.d}
                   fill="none"
-                  stroke={edge.merged ? '#6fae7a' : '#4a382f'}
-                  strokeWidth={edge.merged ? 2.5 : 1.5}
+                  stroke={edge.merged ? '#7cc189' : '#63493c'}
+                  strokeWidth={edge.merged ? 4 : 2.5}
                 />
               ))}
               {layout.nodes.map((node) => (
@@ -140,10 +142,10 @@ export default function LiveTree({ userId }: { userId: string }) {
           {memory.length === 0 ? (
             <Muted>Nothing merged yet.</Muted>
           ) : (
-            memory.slice(0, 8).map((m) => (
-              <div key={m.id} style={{ marginBottom: 10, fontSize: 12.5, lineHeight: 1.5 }}>
-                <span style={{ color: '#efe3d8' }}>{m.text}</span>
-                <span style={{ display: 'block', color: '#d9a441', fontSize: 10.5, marginTop: 2 }}>
+            memory.slice(0, 6).map((m) => (
+              <div key={m.id} style={{ marginBottom: 14, fontSize: 15, lineHeight: 1.5 }}>
+                <span style={{ color: '#f6ece3' }}>{m.text}</span>
+                <span style={{ display: 'block', color: '#f0b64a', fontSize: 13, marginTop: 3 }}>
                   from &ldquo;{m.sourceTitle}&rdquo;
                 </span>
               </div>
@@ -155,12 +157,12 @@ export default function LiveTree({ userId }: { userId: string }) {
           {evidence.length === 0 ? (
             <Muted>No outcomes recorded yet.</Muted>
           ) : (
-            evidence.slice(0, 6).map((e, i) => (
-              <div key={`${e.questionKind}-${e.model}-${i}`} style={{ marginBottom: 9, fontSize: 12 }}>
-                <div style={{ color: '#efe3d8' }}>
-                  {e.questionKind} → <b style={{ color: '#c4703f' }}>{e.provider}</b>
+            evidence.slice(0, 5).map((e, i) => (
+              <div key={`${e.questionKind}-${e.model}-${i}`} style={{ marginBottom: 13, fontSize: 15 }}>
+                <div style={{ color: '#f6ece3' }}>
+                  {e.questionKind} → <b style={{ color: '#e08a4e' }}>{e.provider}</b>
                 </div>
-                <div style={{ color: '#a89486', fontSize: 10.5 }}>
+                <div style={{ color: '#c3ad9e', fontSize: 13 }}>
                   {Math.round(e.successRate * 100)}% kept · {e.samples} runs · $
                   {e.avgCostUsd.toFixed(4)} avg
                 </div>
@@ -181,15 +183,24 @@ function Header({
   totals: { branches: number; pruned: number; recalled: number; memory: number };
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 14 }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, color: '#a89486' }}>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 24,
+        marginBottom: 16,
+      }}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 15, color: '#c3ad9e' }}>
         <span
           style={{
-            width: 8,
-            height: 8,
+            width: 12,
+            height: 12,
             borderRadius: '50%',
-            background: live ? '#6fae7a' : '#d2685c',
-            boxShadow: live ? '0 0 8px rgba(111,174,122,.7)' : 'none',
+            flexShrink: 0,
+            background: live ? '#7cc189' : '#e0715f',
+            boxShadow: live ? '0 0 12px rgba(124,193,137,.8)' : 'none',
           }}
         />
         {live ? 'change stream live' : 'stream offline'}
@@ -204,8 +215,8 @@ function Header({
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <span style={{ fontSize: 12, color: '#a89486' }}>
-      {label} <b style={{ color: '#efe3d8', fontSize: 14 }}>{value}</b>
+    <span style={{ fontSize: 14, color: '#c3ad9e' }}>
+      {label} <b style={{ color: '#f6ece3', fontSize: 22 }}>{value}</b>
     </span>
   );
 }
@@ -214,33 +225,46 @@ function Node({ node, flashing }: { node: PositionedNode; flashing: boolean }) {
   const { branch, x, y } = node;
   const merged = branch.status === 'merged';
   const abandoned = branch.status === 'abandoned';
-  const stroke = merged ? '#6fae7a' : abandoned ? '#5a4a42' : flashing ? '#d9a441' : '#8b4526';
+  const stroke = merged ? '#7cc189' : abandoned ? '#6b584e' : flashing ? '#f0b64a' : '#b0562f';
   const recalled = branch.brief?.recalled.length ?? 0;
 
   return (
-    <g transform={`translate(${x},${y})`} opacity={abandoned ? 0.45 : 1}>
+    <g transform={`translate(${x},${y})`} opacity={abandoned ? 0.55 : 1}>
+      {flashing ? (
+        <rect
+          x={-5}
+          y={-5}
+          width={NODE_W + 10}
+          height={NODE_H + 10}
+          rx={14}
+          fill="none"
+          stroke="#f0b64a"
+          strokeWidth={3}
+          opacity={0.35}
+        />
+      ) : null}
       <rect
         width={NODE_W}
         height={NODE_H}
-        rx={8}
-        fill={flashing ? '#2f231c' : '#241b17'}
+        rx={10}
+        fill={flashing ? '#3a2a20' : '#241b17'}
         stroke={stroke}
-        strokeWidth={flashing ? 2.5 : 1.5}
+        strokeWidth={flashing ? 4 : 2}
       />
-      <text x={12} y={22} fill="#efe3d8" fontSize={12.5} fontWeight={500}>
-        {clip(branch.title || 'Main thread', 26)}
+      <text x={16} y={30} fill="#f6ece3" fontSize={17} fontWeight={600}>
+        {clip(branch.title || 'Main thread', 27)}
       </text>
-      <text x={12} y={40} fill="#a89486" fontSize={10.5}>
+      <text x={16} y={54} fill="#c3ad9e" fontSize={13.5}>
         {branch.brief
           ? `${branch.brief.prunedPct}% pruned · ${branch.brief.briefTokens} tok`
           : 'trunk'}
       </text>
-      <text x={12} y={54} fill={recalled ? '#d9a441' : '#6d5c52'} fontSize={10.5}>
+      <text x={16} y={74} fill={recalled ? '#f0b64a' : '#9b8779'} fontSize={13.5} fontWeight={recalled ? 600 : 400}>
         {recalled ? `${recalled} recalled` : branch.routing?.provider || ''}
         {branch.routing?.fromEvidence ? ' · from evidence' : ''}
       </text>
       {merged ? (
-        <circle cx={NODE_W - 14} cy={14} r={5} fill="#6fae7a" />
+        <circle cx={NODE_W - 18} cy={18} r={7} fill="#7cc189" />
       ) : null}
     </g>
   );
@@ -261,35 +285,36 @@ function Panel({
         background: '#1b1512',
         border: '1px solid #3b2b24',
         borderRadius: 12,
-        padding: 14,
+        padding: 18,
       }}
     >
       <div
         style={{
-          fontSize: 10,
+          fontSize: 13,
+          fontWeight: 600,
           letterSpacing: '.09em',
           textTransform: 'uppercase',
-          color: '#c4703f',
-          marginBottom: 3,
+          color: '#e08a4e',
+          marginBottom: 4,
         }}
       >
         {title}
       </div>
-      <div style={{ fontSize: 10.5, color: '#6d5c52', marginBottom: 12 }}>{hint}</div>
+      <div style={{ fontSize: 12.5, color: '#9b8779', marginBottom: 14 }}>{hint}</div>
       {children}
     </div>
   );
 }
 
 function Muted({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12, color: '#6d5c52' }}>{children}</div>;
+  return <div style={{ fontSize: 15, color: '#9b8779' }}>{children}</div>;
 }
 
 function Empty() {
   return (
-    <div style={{ padding: '80px 20px', textAlign: 'center', color: '#6d5c52' }}>
-      <div style={{ fontSize: 14, marginBottom: 6, color: '#a89486' }}>Waiting for the first turn.</div>
-      <div style={{ fontSize: 12 }}>Say &ldquo;hold on, side question&rdquo; to sprout a branch.</div>
+    <div style={{ padding: '110px 20px', textAlign: 'center', color: '#9b8779' }}>
+      <div style={{ fontSize: 22, marginBottom: 10, color: '#c3ad9e' }}>Waiting for the first turn.</div>
+      <div style={{ fontSize: 16 }}>Say &ldquo;hold on, side question&rdquo; to sprout a branch.</div>
     </div>
   );
 }
@@ -345,8 +370,8 @@ function computeLayout(branches: Branch[]): {
   }
 
   const nodes = [...positions.values()];
-  const width = Math.max(600, ...nodes.map((n) => n.x + NODE_W + 30));
-  const height = Math.max(400, ...nodes.map((n) => n.y + NODE_H + 30));
+  const width = Math.max(760, ...nodes.map((n) => n.x + NODE_W + 30));
+  const height = Math.max(480, ...nodes.map((n) => n.y + NODE_H + 30));
   return { nodes, edges, width, height };
 }
 
