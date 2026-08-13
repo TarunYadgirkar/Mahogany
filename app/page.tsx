@@ -1,4 +1,5 @@
 import LiveTree from '@/components/LiveTree';
+import ManualControl from '@/components/ManualControl';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,8 @@ export default function Home() {
       </header>
 
       <LiveTree userId={userId} />
+
+      <ManualControl />
 
       <footer
         style={{
