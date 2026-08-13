@@ -7,6 +7,7 @@
 import { activeBranch, get } from '@/lib/branches';
 import { abandonBranch } from '@/lib/conversation';
 import { authorized, fail, json, preflight, userIdFrom } from '@/lib/http';
+import { speakAs } from '@/lib/voice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,5 +34,9 @@ export async function POST(req: Request): Promise<Response> {
   if (!branch) return fail('no active branch', 404);
 
   const result = await abandonBranch({ userId, branch });
-  return json({ ok: true, speak: result.say, branch_id: result.branch.id });
+  return json({
+    ok: true,
+    speak: speakAs(result.say, result.branch.depth),
+    branch_id: result.branch.id,
+  });
 }

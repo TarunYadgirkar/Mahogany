@@ -10,6 +10,7 @@ Source of truth for anyone editing this repo, human or agent. Read [PRD.md](PRD.
 4. **The voice loop never hangs.** Any error in `/api/chat/completions` must still return speech. Dead air on stage reads as a crash; a spoken "say that again?" does not.
 5. **The sandbox cluster is the only cluster.** `MONGODB_URI` points at the hackathon Atlas sandbox. Submission eligibility depends on it.
 6. **Never commit `.env.local`.** `.gitignore` covers it. Do not override.
+7. **Spoken text leaves through `speakAs()` in `lib/voice.ts`.** It picks the ElevenLabs voice label from branch depth and strips existing tags before adding one, because a nested tag gets read out as literal angle brackets. With `VOICE_LABEL_*` unset it is a pass-through — which means a route that skips it looks correct locally and silently loses the tone shift on stage.
 
 ## Conventions
 
@@ -46,6 +47,10 @@ About twenty minutes. Don't attempt it before confirming `autoEmbed` actually fa
 ## If LangGraph fights you
 
 The nodes are deliberately thin. `runBranch()` can be replaced by calling `recallInsights`, `assemblePath`, `compileBrief`, `route`, `complete`, and `record` in that order, and nothing else in the codebase changes. You lose checkpointing and the escalation cycle; you keep the demo. Do this only if the graph is actually blocking you — the cycle and the checkpointer are both real, working, and worth points.
+
+## Traces
+
+`complete()` and `route()` are `traceable` wrappers around `runComplete` and `decideRoute` (`lib/trace.ts`), so each provider call and each routing decision is its own LangSmith run under the graph's `branch` run. Export the wrapper, never the inner function — an import of the raw one still works and still answers, it just vanishes from the trace. With `LANGCHAIN_TRACING_V2` off, `traceable` calls straight through and costs nothing.
 
 ## Running without keys
 

@@ -7,6 +7,7 @@
 import { activeBranch, get } from '@/lib/branches';
 import { mergeBranch } from '@/lib/conversation';
 import { authorized, fail, json, preflight, userIdFrom } from '@/lib/http';
+import { speakAs } from '@/lib/voice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,7 @@ export async function POST(req: Request): Promise<Response> {
 
     return json({
       ok: true,
-      speak: result.say,
+      speak: speakAs(result.say, result.branch.depth),
       merged: result.event === 'merged',
       back_to: result.branch.title,
       branch_id: result.branch.id,

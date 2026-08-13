@@ -8,12 +8,33 @@
     "   Model name: mahogany. API key: anything non-empty unless you set TOOL_SECRET.",
     "2. Agent > Tools: add each webhook tool below.",
     "3. Agent > Voice: pick a warm, low-latency voice. Turn on interruptions.",
-    "4. Agent > First message + System prompt: copy the strings below."
+    "4. Agent > First message + System prompt: copy the strings below.",
+    "5. Optional, and the detail nobody else will have — Agent > Voice > Multi-voice:",
+    "   add the voices in supported_voices below, then set VOICE_LABEL_BRANCH (and optionally",
+    "   VOICE_LABEL_DEEP) in your env to the labels you used. The server wraps everything it",
+    "   returns in <Label>...</Label>, so the voice tightens as the tree gets deeper and relaxes",
+    "   on the way back up. Labels are case-sensitive and must match exactly. Leave the env vars",
+    "   empty and the agent just speaks in one voice."
+  ],
+
+  "supported_voices": [
+    {
+      "label": "Branch",
+      "voice_id": "REPLACE_WITH_A_SECOND_VOICE_ID",
+      "description": "Side-branch voice. Same person, more focused and clipped — the sound of someone chasing one thread down.",
+      "model_family": "flash"
+    },
+    {
+      "label": "Deep",
+      "voice_id": "REPLACE_WITH_A_THIRD_VOICE_ID",
+      "description": "A branch off a branch. Quieter and tighter still. Optional — leave VOICE_LABEL_DEEP empty and depth 2 reuses Branch.",
+      "model_family": "flash"
+    }
   ],
 
   "first_message": "I'm here. What are we working through?",
 
-  "system_prompt": "You are a thinking partner in a spoken conversation. Keep answers to two or three sentences — everything you say is read aloud, so never use lists, markdown, or headings.\n\nThis conversation is a tree, not a transcript. When the user raises something that deserves its own thread, call fork_branch with their question. When they signal they want to keep a conclusion — 'merge that', 'keep that', 'save it and go back' — call merge_branch. When they abandon a thread — 'never mind', 'forget it' — call abandon_branch. If they ask whether something was decided before, call recall.\n\nEvery tool returns a `speak` field. Read it aloud naturally; do not read the other fields, and never read out ids or token counts unless the user asks for the numbers.\n\nWhen you are inside a branch, sound slightly more focused and clipped than on the main thread. When you merge back, sound like you are returning to something — a small exhale, a touch warmer. Do not announce these shifts; just let them happen.",
+  "system_prompt": "You are a thinking partner in a spoken conversation. Keep answers to two or three sentences — everything you say is read aloud, so never use lists, markdown, or headings.\n\nThis conversation is a tree, not a transcript. When the user raises something that deserves its own thread, call fork_branch with their question. When they signal they want to keep a conclusion — 'merge that', 'keep that', 'save it and go back' — call merge_branch. When they abandon a thread — 'never mind', 'forget it' — call abandon_branch. If they ask whether something was decided before, call recall.\n\nEvery tool returns a `speak` field. Read it aloud naturally; do not read the other fields, and never read out ids or token counts unless the user asks for the numbers.\n\nWhen you are inside a branch, sound slightly more focused and clipped than on the main thread. When you merge back, sound like you are returning to something — a small exhale, a touch warmer. Do not announce these shifts; just let them happen.\n\nIf a `speak` field arrives already wrapped in a voice tag like <Branch>…</Branch>, pass it through exactly as written — the tag is the server telling you how deep in the tree you are. Never write a voice tag yourself and never nest one inside another.",
 
   "tools": [
     {
