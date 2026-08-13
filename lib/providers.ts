@@ -25,40 +25,40 @@ export interface ModelSpec {
  * The catalog. IDs drift — `npm run providers:check` proves every one of these resolves before
  * you build on it, and every id is env-overridable so a swap does not need a code change.
  */
+/**
+ * The label is spoken aloud inside the router's `reason`, so it is derived from the id that is
+ * actually configured rather than written down beside it. A hardcoded label survives an env swap
+ * and starts announcing a model that is not running — which is worse than a clumsy name, because
+ * the sentence sounds authoritative while being false.
+ */
+function labelFor(provider: ProviderName, id: string): string {
+  const short = id.split('/').pop() ?? id;
+  return `${provider === 'fireworks' ? 'Fireworks' : 'OpenRouter'} ${short}`;
+}
+
+/** USD per 1M tokens. Estimates for the ids below — update both together, or costs drift silently. */
 export const MODELS: ModelSpec[] = [
-  {
-    id: process.env.FW_MODEL_QUICK ?? 'accounts/fireworks/models/llama-v3p1-8b-instruct',
-    provider: 'fireworks',
-    tier: 'quick',
-    label: 'Fireworks 8B',
-    inPerM: 0.2,
-    outPerM: 0.2,
-  },
-  {
-    id: process.env.FW_MODEL_THOUGHTFUL ?? 'accounts/fireworks/models/llama-v3p3-70b-instruct',
-    provider: 'fireworks',
-    tier: 'thoughtful',
-    label: 'Fireworks 70B',
-    inPerM: 0.9,
-    outPerM: 0.9,
-  },
-  {
-    id: process.env.OR_MODEL_THOUGHTFUL ?? 'openai/gpt-4o-mini',
-    provider: 'openrouter',
-    tier: 'thoughtful',
-    label: 'OpenRouter mid',
-    inPerM: 0.15,
-    outPerM: 0.6,
-  },
-  {
-    id: process.env.OR_MODEL_DEEP ?? 'anthropic/claude-3.5-sonnet',
-    provider: 'openrouter',
-    tier: 'deep',
-    label: 'OpenRouter frontier',
-    inPerM: 3,
-    outPerM: 15,
-  },
+  spec(process.env.FW_MODEL_QUICK ?? 'accounts/fireworks/models/gpt-oss-20b', 'fireworks', 'quick', 0.05, 0.2),
+  spec(
+    process.env.FW_MODEL_THOUGHTFUL ?? 'accounts/fireworks/models/gpt-oss-120b',
+    'fireworks',
+    'thoughtful',
+    0.15,
+    0.6,
+  ),
+  spec(process.env.OR_MODEL_THOUGHTFUL ?? 'anthropic/claude-haiku-4.5', 'openrouter', 'thoughtful', 1, 5),
+  spec(process.env.OR_MODEL_DEEP ?? 'anthropic/claude-sonnet-5', 'openrouter', 'deep', 2, 10),
 ];
+
+function spec(
+  id: string,
+  provider: ProviderName,
+  tier: Tier,
+  inPerM: number,
+  outPerM: number,
+): ModelSpec {
+  return { id, provider, tier, label: labelFor(provider, id), inPerM, outPerM };
+}
 
 /** The compiler and classifier always run cheap. Cost discipline is part of the product. */
 export const INTERNAL_MODEL = MODELS[0] as ModelSpec;
@@ -130,8 +130,12 @@ async function runComplete(params: {
 
   if (!config.key) return mockComplete(params.messages, spec, started);
 
+  // Without this, a provider that accepts the connection and then stalls holds the request until
+  // Vercel kills the function at 60s. On stage that is a minute of silence, which reads as a crash.
+  // 25s leaves room for the escalation cycle to still answer inside one function invocation.
   const res = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
+    signal: AbortSignal.timeout(Number(process.env.PROVIDER_TIMEOUT_MS ?? 25_000)),
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${config.key}`,
