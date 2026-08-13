@@ -78,9 +78,13 @@ curl -s localhost:3000/api/tools/fork -H "x-mahogany-secret: $S" \
 
 `npm run atlas:reset` clears the branch tree so the stage opens on a bare trunk, keeping seeded insights and routing evidence. `-- --all` clears those too and forces a re-seed plus another embedding wait.
 
-**Deploy (Phase 3).** Linked to Vercel as `taruns-projects-248def65/mahogany` (`.vercel/` is gitignored, so each clone links itself). The directory is capitalized and Vercel rejects that as a project name — pass `--project mahogany` to `vercel link`, don't let it infer. `npx next build` passes locally against real values: 10 routes, 105 kB First Load JS.
+**Deploy (Phase 3).** Live in production at **https://mahogany-taruns-projects-248def65.vercel.app** — project `taruns-projects-248def65/mahogany`, all 17 env vars set, `PUBLIC_URL` pointing at that URL. `.vercel/` is gitignored, so each clone links itself; pass `--project mahogany` to `vercel link` because Vercel rejects the capitalized directory name.
 
-The first production deploy cannot succeed until the environment variables exist in Vercel — `next build` collects page data, which constructs the Mongo client, which throws without `MONGODB_URI`. Set them there, deploy, then set `PUBLIC_URL` to the deployment URL and redeploy, since the URL isn't knowable until the first deploy lands.
+`next build` constructs the Mongo client while collecting page data, so a deploy with no `MONGODB_URI` in Vercel fails — the three errored deployments in the project's history are exactly that, before the vars were set.
+
+**Vercel Authentication (SSO) must be off** or every request 302s and neither the judges nor the ElevenLabs webhooks can reach it. Settings → Deployment Protection. The Vercel MCP token cannot change this (403), so it is a dashboard action.
+
+**`/api/chat/completions` now requires the shared secret** (`2dded71`). It spends provider credits and forks the tree through intent detection, so it could not stay open on a public URL. ElevenLabs sends its custom-LLM API key as a bearer token — **set that field to `TOOL_SECRET` or every spoken turn 401s into silence.** `/api/branches`, `/api/stream`, and `/api/evidence` stay open by necessity: the tree page reads them with no secret.
 
 A local dev server runs on **port 3002**, not 3000 — 3000 was occupied. Anything hardcoding 3000 locally needs adjusting.
 
