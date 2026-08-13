@@ -78,4 +78,10 @@ curl -s localhost:3000/api/tools/fork -H "x-mahogany-secret: $S" \
 
 `npm run atlas:reset` clears the branch tree so the stage opens on a bare trunk, keeping seeded insights and routing evidence. `-- --all` clears those too and forces a re-seed plus another embedding wait.
 
-Next: Phase 3 voice wiring (ElevenLabs dashboard + Vercel deploy, both operator-side), then Phase 4's proof beat — new session, adjacent question, confirm a recalled fact with its source, then a comparison question that should route to OpenRouter and cite evidence.
+**Deploy (Phase 3).** Linked to Vercel as `taruns-projects-248def65/mahogany` (`.vercel/` is gitignored, so each clone links itself). The directory is capitalized and Vercel rejects that as a project name — pass `--project mahogany` to `vercel link`, don't let it infer. `npx next build` passes locally against real values: 10 routes, 105 kB First Load JS.
+
+The first production deploy cannot succeed until the environment variables exist in Vercel — `next build` collects page data, which constructs the Mongo client, which throws without `MONGODB_URI`. Set them there, deploy, then set `PUBLIC_URL` to the deployment URL and redeploy, since the URL isn't knowable until the first deploy lands.
+
+A local dev server runs on **port 3002**, not 3000 — 3000 was occupied. Anything hardcoding 3000 locally needs adjusting.
+
+Then Phase 4's proof beat — new session, adjacent question, confirm a recalled fact with its source, then a comparison question that should route to OpenRouter and cite evidence.
