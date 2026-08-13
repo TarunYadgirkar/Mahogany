@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Mahogany — fork a side question",
+  "version": "0.1.0",
+  "description": "Select text anywhere, fork it as a side question, and keep the conclusion in Mahogany's long-term memory.",
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "notifications"],
+  "host_permissions": ["http://localhost:3000/*", "http://localhost:3002/*", "https://*.vercel.app/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Fork a side question",
+    "default_icon": { "16": "icon16.png", "128": "icon128.png" }
+  },
+  "icons": { "16": "icon16.png", "128": "icon128.png" }
+}

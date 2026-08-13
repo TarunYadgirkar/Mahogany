@@ -82,6 +82,28 @@ Runs with zero API keys — the provider seam falls back to a deterministic extr
 | `app/api/chat/completions` | The ElevenLabs custom-LLM endpoint — the agent's brain |
 | `app/api/tools/*` | Webhook tools the agent calls directly |
 | `components/LiveTree.tsx` | The projector view, driven by change streams |
+| `components/ManualControl.tsx` | Fork, merge, and abandon from the page — no voice agent needed |
+| `extension/` | Chrome extension: fork a side question from any page |
+
+## Three ways in
+
+The loop does not care which client calls it. All three hit the same routes and write the same tree.
+
+1. **Voice** — an ElevenLabs agent pointed at `/api/chat`. The demo.
+2. **The page** — the Manual control panel under the tree. Type a question, press Fork. This is the stage fallback when the agent misbehaves, and it needs no microphone.
+3. **Chrome extension** — select a sentence on any page, fork it as a side question without leaving what you were reading.
+
+### Installing the extension
+
+Unpacked, no store listing:
+
+1. `chrome://extensions` → enable **Developer mode**
+2. **Load unpacked** → pick the `extension/` folder
+3. Click the icon → **Settings** → set the deployed base URL and paste `TOOL_SECRET`, then **Save**
+
+Then either select text and use the toolbar popup, or right-click a selection → *Fork as a side question in Mahogany*. The popup shows the spoken answer, which provider answered, and how many past insights it recalled. The tree page updates live while you do it, because both are watching the same change stream.
+
+The secret lives in `chrome.storage.local` — typed once, never bundled.
 
 ## Tests
 

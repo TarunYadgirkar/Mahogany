@@ -88,4 +88,10 @@ curl -s localhost:3000/api/tools/fork -H "x-mahogany-secret: $S" \
 
 A local dev server runs on **port 3002**, not 3000 — 3000 was occupied. Anything hardcoding 3000 locally needs adjusting.
 
-Then Phase 4's proof beat — new session, adjacent question, confirm a recalled fact with its source, then a comparison question that should route to OpenRouter and cite evidence.
+Then Phase 4's proof beat — new session, adjacent question, confirm a recalled fact with its source, then a comparison question that should route to OpenRouter and cite evidence. Production evidence already favours OpenRouter on `compare` (75% over 4 samples, against Fireworks at 0% over 3), so that beat is loaded.
+
+**Three clients, one loop.** `components/ManualControl.tsx` drives fork/merge/abandon from the page, and `extension/` does it from any tab. Both call the same routes as the agent and hold the operator-typed secret client-side — neither is a second implementation of the loop, and neither should become one. The page panel is the stage fallback for a voice failure; keep it working.
+
+**Two things are still unverified by anyone:** the ElevenLabs voice path end to end, and the extension inside a real Chrome profile. Both were built against routes proven by HTTP, but proven routes are not a proven integration.
+
+**Model labels are derived from the configured id** (`labelFor` in `lib/providers.ts`) because the label is spoken aloud inside the router's `reason`. Do not hardcode one back. The `inPerM`/`outPerM` figures beside each id are estimates and do drift when ids change — the OpenRouter pair came from their pricing API, the Fireworks pair did not.
