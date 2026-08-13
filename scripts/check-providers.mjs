@@ -64,4 +64,25 @@ for (const t of targets) {
   }
 }
 
+// A 404 here is ambiguous between "id retired" and "your account cannot reach it", and the browse
+// links show the public catalog rather than what this key resolves. Ask the provider directly.
+if (failed) {
+  for (const t of targets) {
+    if (!t.key) continue;
+    try {
+      const res = await fetch(`${t.base}/models`, { headers: { Authorization: `Bearer ${t.key}` } });
+      if (!res.ok) {
+        console.error(`\n${t.provider}: could not list models → ${res.status}`);
+        continue;
+      }
+      const json = await res.json();
+      const ids = (json.data ?? []).map((m) => m.id).sort();
+      console.error(`\n${t.provider}: ${ids.length} ids reachable with this key`);
+      for (const id of ids) console.error(`  ${id}`);
+    } catch (err) {
+      console.error(`\n${t.provider}: could not list models → ${err.message}`);
+    }
+  }
+}
+
 if (failed) process.exitCode = 1;
