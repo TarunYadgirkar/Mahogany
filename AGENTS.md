@@ -78,7 +78,7 @@ curl -s localhost:3000/api/tools/fork -H "x-mahogany-secret: $S" \
 
 `npm run atlas:reset` clears the branch tree so the stage opens on a bare trunk, keeping seeded insights and routing evidence. `-- --all` clears those too and forces a re-seed plus another embedding wait.
 
-**Deploy (Phase 3).** Live in production at **https://mahogany-taruns-projects-248def65.vercel.app** — project `taruns-projects-248def65/mahogany`, all 17 env vars set, `PUBLIC_URL` pointing at that URL. `.vercel/` is gitignored, so each clone links itself; pass `--project mahogany` to `vercel link` because Vercel rejects the capitalized directory name.
+**Deploy (Phase 3).** Live in production at **https://mahogany-alpha.vercel.app** — project `taruns-projects-248def65/mahogany`, all 17 env vars set, `PUBLIC_URL` pointing at that URL. `.vercel/` is gitignored, so each clone links itself; pass `--project mahogany` to `vercel link` because Vercel rejects the capitalized directory name.
 
 `next build` constructs the Mongo client while collecting page data, so a deploy with no `MONGODB_URI` in Vercel fails — the three errored deployments in the project's history are exactly that, before the vars were set.
 

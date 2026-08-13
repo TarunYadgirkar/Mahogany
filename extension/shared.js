@@ -4,7 +4,7 @@
  */
 
 const DEFAULTS = {
-  baseUrl: 'https://mahogany-taruns-projects-248def65.vercel.app',
+  baseUrl: 'https://mahogany-alpha.vercel.app',
   secret: '',
   session: 'extension',
 };
