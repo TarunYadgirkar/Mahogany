@@ -6,11 +6,14 @@ import { callTool } from './shared.js';
 
 const MENU_ID = 'mahogany-fork';
 
+// create() throws if the id already exists, which happens on every extension reload during a demo.
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.contextMenus.create({
-    id: MENU_ID,
-    title: 'Fork as a side question in Mahogany',
-    contexts: ['selection'],
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: MENU_ID,
+      title: 'Branch this as a side question',
+      contexts: ['selection'],
+    });
   });
 });
 
@@ -33,7 +36,7 @@ chrome.contextMenus.onClicked.addListener((info) => {
   void (async () => {
     try {
       const json = await callTool('fork', { question });
-      notify('Forked', json.speak ?? 'Done.');
+      notify('Branched', json.speak ?? 'Done.');
     } catch (err) {
       notify('Mahogany failed', err.message);
     }

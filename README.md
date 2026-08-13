@@ -82,16 +82,18 @@ Runs with zero API keys — the provider seam falls back to a deterministic extr
 | `app/api/chat/completions` | The ElevenLabs custom-LLM endpoint — the agent's brain |
 | `app/api/tools/*` | Webhook tools the agent calls directly |
 | `components/LiveTree.tsx` | The projector view, driven by change streams |
-| `components/ManualControl.tsx` | Fork, merge, and abandon from the page — no voice agent needed |
-| `extension/` | Chrome extension: fork a side question from any page |
+| `components/ManualControl.tsx` | Branch, merge, abandon, and reset from the page — no voice agent needed |
+| `extension/` | Chrome extension: branch a side question from any page |
 
 ## Three ways in
 
 The loop does not care which client calls it. All three hit the same routes and write the same tree.
 
 1. **Voice** — an ElevenLabs agent pointed at `/api/chat`. The demo.
-2. **The page** — the Manual control panel under the tree. Type a question, press Fork. This is the stage fallback when the agent misbehaves, and it needs no microphone.
-3. **Chrome extension** — select a sentence on any page, fork it as a side question without leaving what you were reading.
+2. **The page** — the Manual control panel under the tree. Type a question, press Branch. This is the stage fallback when the agent misbehaves, and it needs no microphone. **Reset tree** clears the branches between run-throughs, keeping seeded memory; it takes two clicks on purpose.
+3. **Chrome extension** — highlight a sentence on any page, branch it as a side question without leaving what you were reading.
+
+Answers are spoken in all three. The voice call gets speech from ElevenLabs directly; the page and the extension go through `/api/speak`, which keeps the ElevenLabs key server-side. With no key set, both fall back to the browser's own voice.
 
 ### Installing the extension
 
@@ -101,7 +103,9 @@ Unpacked, no store listing:
 2. **Load unpacked** → pick the `extension/` folder
 3. Click the icon → **Settings** → set the deployed base URL and paste `TOOL_SECRET`, then **Save**
 
-Then either select text and use the toolbar popup, or right-click a selection → *Fork as a side question in Mahogany*. The popup shows the spoken answer, which provider answered, and how many past insights it recalled. The tree page updates live while you do it, because both are watching the same change stream.
+Then either highlight text and click the toolbar icon, or right-click a selection → *Branch this as a side question*. The popup shows the spoken answer, which provider answered, and how many past insights it recalled. The tree page updates live while you do it, because both are watching the same change stream.
+
+**If a button seems to do nothing**, open Settings → **Test connection**. It reports whether the base URL is reachable, whether Atlas is connected, and whether the server accepted your secret — the three ways this fails. The status line at the top always shows which host the popup is talking to and whether it captured a selection. Chrome refuses to read `chrome://` pages, the web store, and other extensions' pages; the popup says so rather than looking broken.
 
 The secret lives in `chrome.storage.local` — typed once, never bundled.
 

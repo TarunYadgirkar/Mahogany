@@ -45,17 +45,34 @@ export async function GET(req: Request): Promise<Response> {
         });
         watchers.push(bs, is);
 
+        // Closing a watcher on abort makes its in-flight iterator throw. Unhandled, that is an
+        // unhandledRejection on every page close — noise in dev, and a process Node is entitled to
+        // kill in production. Once `closed`, that throw is simply how the stream ends.
+        const stopped = (event: string, err: unknown) => {
+          if (closed) return;
+          console.error(`[stream] ${event} watcher stopped:`, err);
+          send('degraded', { reason: `${event} watcher stopped` });
+        };
+
         void (async () => {
-          for await (const change of bs) {
-            const doc = 'fullDocument' in change ? change.fullDocument : null;
-            if (doc) send('branch', { ...doc, _id: undefined });
+          try {
+            for await (const change of bs) {
+              const doc = 'fullDocument' in change ? change.fullDocument : null;
+              if (doc) send('branch', { ...doc, _id: undefined });
+            }
+          } catch (err) {
+            stopped('branch', err);
           }
         })();
 
         void (async () => {
-          for await (const change of is) {
-            const doc = 'fullDocument' in change ? change.fullDocument : null;
-            if (doc) send('insight', { ...doc, _id: undefined });
+          try {
+            for await (const change of is) {
+              const doc = 'fullDocument' in change ? change.fullDocument : null;
+              if (doc) send('insight', { ...doc, _id: undefined });
+            }
+          } catch (err) {
+            stopped('insight', err);
           }
         })();
       } catch (err) {

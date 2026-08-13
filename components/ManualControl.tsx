@@ -13,6 +13,7 @@
 import { useEffect, useState } from 'react';
 
 type Action = 'fork' | 'merge' | 'return';
+type Busy = Action | 'reset';
 
 interface ToolResponse {
   ok?: boolean;
@@ -31,9 +32,10 @@ export default function ManualControl() {
   const [secret, setSecret] = useState('');
   const [session, setSession] = useState('stage');
   const [text, setText] = useState('');
-  const [busy, setBusy] = useState<Action | null>(null);
+  const [busy, setBusy] = useState<Busy | null>(null);
   const [result, setResult] = useState<ToolResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [armed, setArmed] = useState(false);
 
   // Survive the reload that a mid-demo code change or an accidental refresh causes.
   useEffect(() => {
@@ -43,6 +45,30 @@ export default function ManualControl() {
   const remember = (value: string) => {
     setSecret(value);
     sessionStorage.setItem(SECRET_KEY, value);
+  };
+
+  /**
+   * Speak the answer. The server holds the ElevenLabs key; with none configured it answers 503 and
+   * the browser's own voice takes over — worse, but a silent fallback would look like a failure.
+   */
+  const say = async (spoken: string) => {
+    try {
+      const res = await fetch('/api/speak', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(secret ? { 'x-mahogany-secret': secret } : {}),
+        },
+        body: JSON.stringify({ text: spoken }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const audio = new Audio(URL.createObjectURL(await res.blob()));
+      await audio.play();
+    } catch {
+      if (typeof speechSynthesis !== 'undefined') {
+        speechSynthesis.speak(new SpeechSynthesisUtterance(spoken));
+      }
+    }
   };
 
   const run = async (action: Action) => {
@@ -72,8 +98,38 @@ export default function ManualControl() {
       }
       setResult(json);
       if (action === 'fork') setText('');
+      if (json.speak) void say(json.speak);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'request failed');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** Two clicks, because this deletes the tree and the button sits next to the ones that build it. */
+  const reset = async () => {
+    if (!armed) {
+      setArmed(true);
+      setTimeout(() => setArmed(false), 4000);
+      return;
+    }
+    setArmed(false);
+    setBusy('reset');
+    setError(null);
+    setResult(null);
+    try {
+      const res = await fetch('/api/demo/reset', {
+        method: 'POST',
+        headers: secret ? { 'x-mahogany-secret': secret } : {},
+      });
+      const json = (await res.json()) as { ok?: boolean; deleted?: number; error?: string };
+      if (!res.ok) {
+        setError(res.status === 401 ? 'Wrong secret — the server rejected it.' : (json.error ?? `HTTP ${res.status}`));
+        return;
+      }
+      setResult({ speak: `Cleared ${json.deleted ?? 0} branches. Insights kept.` });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'reset failed');
     } finally {
       setBusy(null);
     }
@@ -138,13 +194,20 @@ export default function ManualControl() {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button onClick={() => void run('fork')} disabled={!canFork} style={primaryButton(canFork)}>
-          {busy === 'fork' ? 'Forking…' : 'Fork'}
+          {busy === 'fork' ? 'Branching…' : 'Branch'}
         </button>
         <button onClick={() => void run('merge')} disabled={busy !== null} style={secondaryButton}>
           {busy === 'merge' ? 'Merging…' : 'Merge'}
         </button>
         <button onClick={() => void run('return')} disabled={busy !== null} style={secondaryButton}>
           {busy === 'return' ? 'Dropping…' : 'Abandon'}
+        </button>
+        <button
+          onClick={() => void reset()}
+          disabled={busy !== null}
+          style={{ ...secondaryButton, marginLeft: 'auto', ...(armed ? armedButton : {}) }}
+        >
+          {busy === 'reset' ? 'Clearing…' : armed ? 'Click again to clear tree' : 'Reset tree'}
         </button>
       </div>
 
@@ -195,6 +258,11 @@ function primaryButton(enabled: boolean) {
     cursor: enabled ? 'pointer' : 'not-allowed',
   } as const;
 }
+
+const armedButton = {
+  borderColor: '#d9776a',
+  color: '#d9776a',
+} as const;
 
 const secondaryButton = {
   background: 'transparent',

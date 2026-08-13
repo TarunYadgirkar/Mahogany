@@ -8,7 +8,7 @@
         color-scheme: dark;
       }
       body {
-        width: 340px;
+        width: 348px;
         margin: 0;
         padding: 14px;
         background: #17110f;
@@ -20,7 +20,18 @@
         letter-spacing: 0.16em;
         text-transform: uppercase;
         color: #c4703f;
-        margin: 0 0 10px;
+        margin: 0 0 8px;
+      }
+      #status {
+        font-size: 11.5px;
+        color: #8a7568;
+        margin-bottom: 10px;
+        word-break: break-all;
+      }
+      #source {
+        font-size: 11.5px;
+        color: #a89486;
+        margin-bottom: 6px;
       }
       textarea,
       input {
@@ -94,9 +105,15 @@
   </head>
   <body>
     <h1>Mahogany</h1>
-    <textarea id="question" rows="3" placeholder="Select text on the page, or type a side question."></textarea>
+    <div id="status">starting…</div>
+    <div id="source" class="hidden"></div>
+    <textarea
+      id="question"
+      rows="3"
+      placeholder="Highlight text on the page, or type a side question here."
+    ></textarea>
     <div class="row">
-      <button id="fork">Fork</button>
+      <button id="branch">Branch</button>
       <button id="merge" class="secondary">Merge</button>
     </div>
     <div id="out" class="hidden">
@@ -109,7 +126,10 @@
       <input id="baseUrl" type="url" placeholder="https://your-app.vercel.app" />
       <input id="secret" type="password" placeholder="TOOL_SECRET" />
       <input id="session" type="text" placeholder="session id" />
-      <button id="save" class="secondary">Save</button>
+      <div class="row">
+        <button id="save" class="secondary">Save</button>
+        <button id="test" class="secondary">Test connection</button>
+      </div>
     </details>
     <script type="module" src="popup.js"></script>
   </body>
