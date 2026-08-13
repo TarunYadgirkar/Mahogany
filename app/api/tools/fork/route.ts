@@ -8,6 +8,7 @@
 import { activeBranch, ensureTrunk } from '@/lib/branches';
 import { forkBranch } from '@/lib/conversation';
 import { authorized, fail, json, preflight, userIdFrom } from '@/lib/http';
+import { speakAs } from '@/lib/voice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,7 +43,7 @@ export async function POST(req: Request): Promise<Response> {
     // for whoever is narrating the numbers on stage.
     return json({
       ok: true,
-      speak: result.say,
+      speak: speakAs(result.say, result.branch.depth),
       branch_id: result.branch.id,
       depth: result.branch.depth,
       ...result.detail,

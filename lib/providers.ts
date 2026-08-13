@@ -8,6 +8,7 @@
  *
  * Every model call in Mahogany goes through `complete()`. Nothing else talks to a provider.
  */
+import { traced } from './trace';
 import type { ProviderName, Tier } from './types';
 
 export interface ModelSpec {
@@ -116,7 +117,7 @@ export interface CompleteResult {
   mock: boolean;
 }
 
-export async function complete(params: {
+async function runComplete(params: {
   messages: ChatMessage[];
   model?: ModelSpec;
   maxTokens?: number;
@@ -169,6 +170,13 @@ export async function complete(params: {
     mock: false,
   };
 }
+
+/**
+ * The seam is also the trace boundary: one LangSmith run per provider call, carrying the model,
+ * the token counts, and the cost. Two runs of the same question then differ visibly in which
+ * provider answered — which is the router's claim, made checkable.
+ */
+export const complete = traced(runComplete, { name: 'complete', runType: 'llm' });
 
 /**
  * Keyword-ranked extractive stand-in. Deliberately not good. It exists so the whole system runs

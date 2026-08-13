@@ -12,6 +12,7 @@
  */
 import { handleUtterance } from '@/lib/conversation';
 import { preflight, userIdFrom } from '@/lib/http';
+import { speakAs } from '@/lib/voice';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,8 @@ export async function POST(req: Request): Promise<Response> {
   let say: string;
   try {
     const result = await handleUtterance({ userId, sessionId, utterance });
-    say = result.say;
+    // Depth decides the voice, so descending into a branch and merging back are both audible.
+    say = speakAs(result.say, result.branch.depth);
     console.log(
       `[voice] ${result.event} · ${result.branch.title.slice(0, 40)}` +
         (result.detail
