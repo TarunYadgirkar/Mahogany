@@ -50,3 +50,13 @@ The nodes are deliberately thin. `runBranch()` can be replaced by calling `recal
 ## Running without keys
 
 With no `FIREWORKS_API_KEY` or `OPENROUTER_API_KEY`, `lib/providers.ts` returns a deterministic extractive stand-in and marks the result `mock: true`. The whole loop is exercisable this way. Atlas is the one thing with no fallback.
+
+## Ongoing
+
+**Lane A — critical path. Owns `main`.** Atlas setup → smoke gate → voice wiring → deploy. Opus 5, high effort, no worktree isolation. Other lanes: branch, do not push to `main`.
+
+Done: repo cloned to `~/TarunsCode/hackathons/mahogany-mongodb/repos/Mahogany`. Source flattened to the repo root and ignore rules restored (`33b44e7`) — the upload commit had buried everything two levels deep under a zip of itself and dropped the dotfiles. `npm install` done on node 24.18. `npm run typecheck` clean, 21/21 tests pass.
+
+Blocked: local secrets file is not filled in, so PLAN.md Phase 1 has not started. `next build` fails at page-data collection for `/api/tools/fork` with `MONGODB_URI is not set` — expected, not a regression. Nothing in Phase 1 onward can run until the Atlas URI and both provider keys are in place.
+
+Next, in order: `npm run providers:check` (all four ids must print OK), `npm run atlas:setup` (wait for `vector index is queryable`), `npm run atlas:seed`, `/api/health`, then the fork smoke curl. **Gate: `recalled > 0` before Phase 2.**
