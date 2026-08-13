@@ -1,0 +1,2 @@
+# Mahogany
+Mongo DB Hackathon
