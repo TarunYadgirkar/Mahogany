@@ -7,6 +7,7 @@ const DEFAULTS = {
   baseUrl: 'https://mahogany-alpha.vercel.app',
   secret: '',
   session: 'extension',
+  muted: false,
 };
 
 /** Pages Chrome refuses to inject into. Worth naming, so the popup can say why instead of failing. */
@@ -97,39 +98,9 @@ export async function callTool(action, body) {
 
   if (!res.ok) {
     if (res.status === 401) throw new Error('Rejected: the secret does not match TOOL_SECRET.');
-    // A merge with nothing open is the single most common confusion: branches belong to a session,
-    // so merging from a different session id finds nothing. Say which session, not just "404".
-    if (res.status === 404 && action !== 'fork') {
-      throw new Error(`Nothing open in session “${session}” — branch something first.`);
-    }
     throw new Error(json.error ?? `HTTP ${res.status}`);
   }
   return json;
-}
-
-/** Clear the branch tree so a rehearsal does not leave nodes on the projector. Keeps memory. */
-export async function resetTree() {
-  const { baseUrl, secret } = await settings();
-  const res = await fetch(`${base(baseUrl)}/api/demo/reset`, {
-    method: 'POST',
-    headers: secret ? { 'x-mahogany-secret': secret } : {},
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    if (res.status === 401) throw new Error('Rejected: the secret does not match TOOL_SECRET.');
-    throw new Error(json.error ?? `HTTP ${res.status}`);
-  }
-  return json;
-}
-
-/**
- * A fresh session id. Branches are scoped to a session, so a new one gives the demo a clean trunk
- * without deleting anything — which is the difference between "clear the stage" and "erase memory".
- */
-export async function newSession() {
-  const session = `demo-${Date.now().toString(36)}`;
-  await saveSettings({ session });
-  return session;
 }
 
 /**

@@ -1,13 +1,4 @@
-import {
-  callTool,
-  health,
-  newSession,
-  pageContext,
-  resetTree,
-  saveSettings,
-  settings,
-  speechUrl,
-} from './shared.js';
+import { callTool, health, pageContext, saveSettings, settings, speechUrl } from './shared.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -22,52 +13,29 @@ function bind() {
   el('merge').addEventListener('click', () => void run('merge'));
   el('save').addEventListener('click', () => void save());
   el('test').addEventListener('click', () => void test());
-  el('reset').addEventListener('click', () => void wipe());
-  el('fresh').addEventListener('click', () => void fresh());
   // Branching from a page is more convincing when the tree is on screen moving as you do it.
-  el('tree').addEventListener('click', () => void open(''));
-  el('talk').addEventListener('click', () => void open('/voice'));
+  el('tree').addEventListener('click', () => void openPage(''));
+  el('talk').addEventListener('click', () => void openPage('/voice'));
+  el('mute').addEventListener('click', () => void toggleMute());
 }
 
-/**
- * Reuse the tab if one is already parked on this page. Opening a fourth copy of the tree mid-demo is
- * how you end up presenting a stale one — which is exactly the confusion this replaces.
- */
-async function open(path) {
+async function openPage(path) {
   const { baseUrl } = await settings();
-  const url = `${baseUrl.replace(/\/$/, '')}${path}`;
-  const existing = await chrome.tabs.query({ url: `${url}*` });
-  if (existing[0]?.id) {
-    await chrome.tabs.update(existing[0].id, { active: true, url });
-    if (existing[0].windowId) await chrome.windows.update(existing[0].windowId, { focused: true });
-    return;
-  }
-  await chrome.tabs.create({ url });
+  await chrome.tabs.create({ url: `${baseUrl.replace(/\/$/, '')}${path}` });
 }
 
-async function wipe() {
-  clearOutput();
-  setStatus('clearing…');
-  el('reset').disabled = true;
-  try {
-    const json = await resetTree();
-    setStatus(`cleared ${json.deleted ?? 0} branches`);
-    el('speak').textContent = `Cleared ${json.deleted ?? 0} branches. Long-term memory kept.`;
-    el('meta').textContent = '';
-    el('out').classList.remove('hidden');
-  } catch (err) {
-    showError(err.message);
-    setStatus('reset failed');
-  } finally {
-    el('reset').disabled = false;
-  }
+/** Presenting with the tree on a projector means two voices talking at once. One button stops that. */
+async function toggleMute() {
+  const { muted } = await settings();
+  const next = !muted;
+  await saveSettings({ muted: next });
+  paintMute(next);
+  if (next && typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
 }
 
-async function fresh() {
-  const session = await newSession();
-  el('session').value = session;
-  clearOutput();
-  setStatus(`new session · ${session}`);
+function paintMute(muted) {
+  el('mute').textContent = muted ? 'Unmute' : 'Mute';
+  el('mute').style.color = muted ? '#d9776a' : '#e8ddd4';
 }
 
 function setStatus(message) {
@@ -95,8 +63,11 @@ function showResult(json) {
   el('out').classList.remove('hidden');
 }
 
-/** ElevenLabs when the server has a key, the browser's voice when it does not. */
+/** ElevenLabs when the server has a key, the browser's voice when it does not, nothing when muted. */
 async function say(text) {
+  const { muted } = await settings();
+  if (muted) return;
+
   const url = await speechUrl(text);
   if (url) {
     try {
@@ -174,6 +145,7 @@ async function loadSettings() {
   el('baseUrl').value = current.baseUrl;
   el('secret').value = current.secret;
   el('session').value = current.session;
+  paintMute(current.muted);
   return current;
 }
 
@@ -196,11 +168,8 @@ bind();
 
 void (async () => {
   let base = '(unset)';
-  let session = '(unset)';
   try {
-    const current = await loadSettings();
-    base = current.baseUrl;
-    session = current.session;
+    base = (await loadSettings()).baseUrl;
   } catch (err) {
     showError(`settings unavailable: ${err.message}`);
   }
@@ -214,10 +183,6 @@ void (async () => {
     el('source').classList.remove('hidden');
   }
 
-  // Session is on screen because a merge only ever finds branches from its own session, and a
-  // mismatch there looks like a broken button rather than a scoping rule.
-  setStatus(
-    `${base.replace(/^https?:\/\//, '')} · ${session} · ${captured ? 'selection captured' : 'no selection'}`,
-  );
+  setStatus(`${base.replace(/^https?:\/\//, '')} · ${captured ? 'selection captured' : 'no selection'}`);
   el('question').focus();
 })();

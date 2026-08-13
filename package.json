@@ -13,6 +13,7 @@
     "atlas:setup": "node --env-file=.env.local scripts/setup-atlas.mjs",
     "atlas:seed": "node --env-file=.env.local scripts/seed.mjs",
     "atlas:reset": "node --env-file=.env.local scripts/reset-demo.mjs",
+    "demo:tree": "node --env-file=.env.local scripts/demo-tree.mjs",
     "providers:check": "node --env-file=.env.local scripts/check-providers.mjs"
   },
   "dependencies": {
