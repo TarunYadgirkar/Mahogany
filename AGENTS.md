@@ -60,8 +60,15 @@ With no `FIREWORKS_API_KEY` or `OPENROUTER_API_KEY`, `lib/providers.ts` returns 
 
 **Lane A — critical path. Owns `main`.** Atlas setup → smoke gate → voice wiring → deploy. Opus 5, high effort, no worktree isolation. Other lanes: branch, do not push to `main`.
 
-Done: repo cloned to `~/TarunsCode/hackathons/mahogany-mongodb/repos/Mahogany`. Source flattened to the repo root and ignore rules restored (`33b44e7`) — the upload commit had buried everything two levels deep under a zip of itself and dropped the dotfiles. `npm install` done on node 24.18. `npm run typecheck` clean, 21/21 tests pass.
+**Phases 1 and 2 are done and verified.** Atlas set up, `insight_recall` built to READY, seeded 3 insights and 10 outcomes. `/api/health` returns `ok: true`. The fork smoke passed the gate at `recalled: 3`, `fromEvidence: true`, `mock: false`. The live tree streams new nodes without a refresh, a merge turns the node green, and the merged line lands in the memory panel. Verified against a real cluster and real Fireworks calls, not mocks.
 
-Blocked: local secrets file is not filled in, so PLAN.md Phase 1 has not started. `next build` fails at page-data collection for `/api/tools/fork` with `MONGODB_URI is not set` — expected, not a regression. Nothing in Phase 1 onward can run until the Atlas URI and both provider keys are in place.
+All lanes are merged into `main`. Lane C branched from the pre-flatten upload commit, so it came in through rename detection (`8e4a654`); lane D's tree work and the checker change had to be recovered from an unpushed local branch after `main` was rolled back to `d769591`. 31 tests pass, typecheck clean.
 
-Next, in order: `npm run providers:check` (all four ids must print OK), `npm run atlas:setup` (wait for `vector index is queryable`), `npm run atlas:seed`, `/api/health`, then the fork smoke curl. **Gate: `recalled > 0` before Phase 2.**
+**Both Fireworks Llama ids are retired** — the account serves 24 ids and none are Llama. Now on `gpt-oss-20b` (quick) and `gpt-oss-120b` (thoughtful). On OpenRouter, `anthropic/claude-3.5-sonnet` is gone from the catalog; now `claude-haiku-4.5` and `claude-sonnet-5`. When ids drift again, `npm run providers:check` prints every id the key can actually reach.
+
+Blocked, both needing the operator, not code:
+
+- **OpenRouter returns `401 User not found.`** The key in the local secrets file does not resolve to an account. Earlier it was `402 Insufficient credits`, so credits are unclaimed too. `lib/providers.ts` only falls back to the mock when a key is *absent* — a bad key present is a hard error mid-branch. PLAN.md Phase 4's comparison beat routes to OpenRouter by design, so that beat cannot work until this is fixed.
+- **`TOOL_SECRET` is empty** — `/api/health` reports `toolSecret: false`. Fine on localhost, required before the Phase 3 public deploy.
+
+Next: Phase 3 voice wiring (ElevenLabs dashboard + Vercel deploy, both operator-side), then Phase 4's proof beat once OpenRouter resolves.
