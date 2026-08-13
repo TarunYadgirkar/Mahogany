@@ -20,6 +20,9 @@ export async function GET(): Promise<Response> {
     },
     models: MODELS.map((m) => `${m.provider}:${m.tier}:${m.id}`),
     toolSecret: Boolean(process.env.TOOL_SECRET),
+    // Whether /api/speak can use ElevenLabs, or whether the page and the extension are falling back
+    // to the browser's voice. Configured-or-not is checkable without the secret; the key is not.
+    elevenlabsSpeech: Boolean(process.env.ELEVENLABS_API_KEY),
   };
 
   try {
