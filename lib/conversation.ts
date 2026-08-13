@@ -152,8 +152,11 @@ export async function mergeBranch(params: {
   });
 
   const parent = await branchStore.get(params.userId, params.branch.parentId);
+  // Merging a branch off a branch returns to that branch, not the trunk. Saying "main thread"
+  // there tells the room the demo lost its place at the one moment the tree proves it hasn't.
+  const back = !parent || parent.depth === 0 ? 'the main thread' : `“${parent.title}”`;
   return {
-    say: `Kept it: ${doc.text} Back to the main thread.`,
+    say: `Kept it: ${doc.text} Back to ${back}.`,
     event: 'merged',
     branch: parent ?? params.branch,
   };
