@@ -11,7 +11,7 @@
  * will do at least once on stage.
  */
 import { handleUtterance } from '@/lib/conversation';
-import { preflight, userIdFrom } from '@/lib/http';
+import { authorized, preflight, userIdFrom } from '@/lib/http';
 import { speakAs } from '@/lib/voice';
 
 export const runtime = 'nodejs';
@@ -32,6 +32,11 @@ interface ChatBody {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  // This route spends provider credits and forks the tree through intent detection, so on a public
+  // URL it needs the same gate as /api/tools/*. ElevenLabs sends its custom-LLM API key as a bearer
+  // token, which `authorized` accepts — set that field to TOOL_SECRET. Unset secret stays open.
+  if (!authorized(req)) return new Response('unauthorized', { status: 401 });
+
   let body: ChatBody;
   try {
     body = (await req.json()) as ChatBody;
