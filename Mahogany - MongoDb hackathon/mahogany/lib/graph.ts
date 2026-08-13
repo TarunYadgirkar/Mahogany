@@ -217,7 +217,19 @@ export async function runBranch(params: {
       turns: params.turns,
       parent: params.parent,
     },
-    { configurable: { thread_id: params.branchId } },
+    {
+      configurable: { thread_id: params.branchId },
+      // Named and tagged so two runs of the same question are findable side by side in LangSmith —
+      // the cold one and the warm one are the whole learning argument.
+      runName: 'branch',
+      tags: ['mahogany', 'branch'],
+      metadata: {
+        branchId: params.branchId,
+        userId: params.userId,
+        question: params.question,
+        parentDepth: params.parent?.depth ?? 0,
+      },
+    },
   )) as State;
 
   if (!final.brief || !final.routing) {

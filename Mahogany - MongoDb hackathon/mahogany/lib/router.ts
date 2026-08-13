@@ -10,6 +10,7 @@
  */
 import { bestRouteFor } from './outcomes';
 import { complete, INTERNAL_MODEL, modelById, modelsForTier, providerConfigured } from './providers';
+import { traced } from './trace';
 import type { Brief, ProviderName, QuestionKind, Routing, Tier } from './types';
 import { QUESTION_KINDS, TIER_ORDER } from './types';
 
@@ -22,7 +23,7 @@ const CLASSIFIER_SYSTEM = [
   'Judge the QUESTION, not the length of the context it sits on.',
 ].join(' ');
 
-export async function route(params: {
+async function decideRoute(params: {
   userId: string;
   question: string;
   brief: Brief;
@@ -56,6 +57,13 @@ export async function route(params: {
     reason: `${baselineReason(classified.tier, classified.kind)} No history yet, so ${spec.label} takes it.`,
   };
 }
+
+/**
+ * Traced as its own run so the decision — and `fromEvidence` in particular — is visible next to
+ * the call it produced. Comparing a cold trace against a warm one is how the learning loop is
+ * shown rather than described.
+ */
+export const route = traced(decideRoute, { name: 'route' });
 
 /** Pick a configured model for a tier, degrading down the ladder rather than failing. */
 export function pickForTier(tier: Tier) {

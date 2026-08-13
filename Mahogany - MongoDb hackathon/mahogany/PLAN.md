@@ -87,8 +87,8 @@ The demo's whole argument is that stored state changes behavior. Rehearse exactl
 
 ## Stretch, in the order worth attempting
 
-1. **Tone shift per branch depth** — a second ElevenLabs voice id for branch mode. Highest payoff for the ElevenLabs prize, roughly 20 minutes, and it is the detail nobody else will have.
-2. **LangSmith traces** — set `LANGCHAIN_TRACING_V2=true` and show two traces side by side: cold run picks the cheap route, warm run picks differently because of stored evidence. That is the learning claim *proven*.
+1. **Tone shift per branch depth** — *code landed*. Everything the agent says is wrapped in `<Label>…</Label>` chosen by branch depth (`lib/voice.ts`). What is left is dashboard work: add the voices under Agent > Voice > Multi-voice with the labels from [scripts/elevenlabs-agent.json](scripts/elevenlabs-agent.json), then set `VOICE_LABEL_BRANCH` — and optionally `VOICE_LABEL_DEEP` — locally and in Vercel. Unset labels emit no tags, so skipping this is safe.
+2. **LangSmith traces** — *code landed*. Set `LANGCHAIN_TRACING_V2=true` and `LANGCHAIN_API_KEY`, then ask the same question cold and again after a merge. Each branch is one `branch` run with `route` and `complete` beneath it; the two traces diverge at `route`, where `fromEvidence` flips to true. That is the learning claim *proven*. Pull both up once in rehearsal — hunting for a trace on stage is worse than not showing one.
 3. **Hybrid recall** — `$rankFusion` over Atlas Search + vector for typo tolerance on transcribed speech, which is where exact-match retrieval actually hurts.
 4. **Insight flight animation** — the merged line visibly travelling from branch to trunk.
 
