@@ -1,0 +1,96 @@
+{
+  "_readme": [
+    "Paste these pieces into the ElevenLabs agent dashboard. Replace https://YOUR-APP.vercel.app",
+    "with your deployed URL (ngrok/localtunnel also works while building).",
+    "",
+    "1. Agent > LLM > Custom LLM: set the server URL to https://YOUR-APP.vercel.app/api/chat",
+    "   ElevenLabs appends /completions, so the endpoint it hits is /api/chat/completions.",
+    "   Model name: mahogany. API key: anything non-empty unless you set TOOL_SECRET.",
+    "2. Agent > Tools: add each webhook tool below.",
+    "3. Agent > Voice: pick a warm, low-latency voice. Turn on interruptions.",
+    "4. Agent > First message + System prompt: copy the strings below."
+  ],
+
+  "first_message": "I'm here. What are we working through?",
+
+  "system_prompt": "You are a thinking partner in a spoken conversation. Keep answers to two or three sentences — everything you say is read aloud, so never use lists, markdown, or headings.\n\nThis conversation is a tree, not a transcript. When the user raises something that deserves its own thread, call fork_branch with their question. When they signal they want to keep a conclusion — 'merge that', 'keep that', 'save it and go back' — call merge_branch. When they abandon a thread — 'never mind', 'forget it' — call abandon_branch. If they ask whether something was decided before, call recall.\n\nEvery tool returns a `speak` field. Read it aloud naturally; do not read the other fields, and never read out ids or token counts unless the user asks for the numbers.\n\nWhen you are inside a branch, sound slightly more focused and clipped than on the main thread. When you merge back, sound like you are returning to something — a small exhale, a touch warmer. Do not announce these shifts; just let them happen.",
+
+  "tools": [
+    {
+      "type": "webhook",
+      "name": "fork_branch",
+      "description": "Start a focused side branch off the current conversation. Call this when the user says 'side question', 'hold on', 'tangent', 'unrelated but', or otherwise raises something that deserves its own thread. Returns a compiled brief and an answer.",
+      "url": "https://YOUR-APP.vercel.app/api/tools/fork",
+      "method": "POST",
+      "headers": { "x-mahogany-secret": "YOUR_TOOL_SECRET" },
+      "body_parameters": [
+        {
+          "name": "question",
+          "type": "string",
+          "required": true,
+          "description": "The side question, phrased as a standalone question."
+        },
+        {
+          "name": "session_id",
+          "type": "string",
+          "required": false,
+          "description": "The conversation id. Pass the dynamic variable system__conversation_id."
+        }
+      ]
+    },
+    {
+      "type": "webhook",
+      "name": "merge_branch",
+      "description": "Keep one durable conclusion from the current branch and return to the parent thread. Call this when the user says 'merge that', 'keep that', 'save it', 'remember that', or 'go back to the main thread'.",
+      "url": "https://YOUR-APP.vercel.app/api/tools/merge",
+      "method": "POST",
+      "headers": { "x-mahogany-secret": "YOUR_TOOL_SECRET" },
+      "body_parameters": [
+        {
+          "name": "insight",
+          "type": "string",
+          "required": false,
+          "description": "The conclusion in one sentence, if the user stated it. Leave empty to have the server distill it from the branch."
+        },
+        {
+          "name": "session_id",
+          "type": "string",
+          "required": false,
+          "description": "Pass the dynamic variable system__conversation_id."
+        }
+      ]
+    },
+    {
+      "type": "webhook",
+      "name": "abandon_branch",
+      "description": "Drop the current branch without keeping anything. Call this when the user says 'never mind', 'forget it', 'drop that', or calls it a dead end.",
+      "url": "https://YOUR-APP.vercel.app/api/tools/return",
+      "method": "POST",
+      "headers": { "x-mahogany-secret": "YOUR_TOOL_SECRET" },
+      "body_parameters": [
+        {
+          "name": "session_id",
+          "type": "string",
+          "required": false,
+          "description": "Pass the dynamic variable system__conversation_id."
+        }
+      ]
+    },
+    {
+      "type": "webhook",
+      "name": "recall",
+      "description": "Search everything concluded in past conversations. Call this when the user asks whether something was already decided, or when you suspect a prior conclusion is relevant.",
+      "url": "https://YOUR-APP.vercel.app/api/tools/recall",
+      "method": "POST",
+      "headers": { "x-mahogany-secret": "YOUR_TOOL_SECRET" },
+      "body_parameters": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "description": "What to look for, in plain language."
+        }
+      ]
+    }
+  ]
+}

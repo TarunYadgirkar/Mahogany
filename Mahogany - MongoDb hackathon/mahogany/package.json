@@ -1,0 +1,38 @@
+{
+  "name": "mahogany",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "atlas:setup": "node --env-file=.env.local scripts/setup-atlas.mjs",
+    "atlas:seed": "node --env-file=.env.local scripts/seed.mjs",
+    "providers:check": "node --env-file=.env.local scripts/check-providers.mjs"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.40",
+    "@langchain/langgraph": "^0.2.60",
+    "@langchain/langgraph-checkpoint-mongodb": "^0.0.6",
+    "mongodb": "^6.12.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.9"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true
+  }
+}
