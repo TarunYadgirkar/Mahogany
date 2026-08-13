@@ -66,9 +66,16 @@ All lanes are merged into `main`. Lane C branched from the pre-flatten upload co
 
 **Both Fireworks Llama ids are retired** — the account serves 24 ids and none are Llama. Now on `gpt-oss-20b` (quick) and `gpt-oss-120b` (thoughtful). On OpenRouter, `anthropic/claude-3.5-sonnet` is gone from the catalog; now `claude-haiku-4.5` and `claude-sonnet-5`. When ids drift again, `npm run providers:check` prints every id the key can actually reach.
 
-Blocked, both needing the operator, not code:
+All four model ids now resolve on both providers, and `TOOL_SECRET` is set — `/api/health` reports `toolSecret: true` and an unauthenticated `POST /api/tools/fork` correctly returns 401. Which means **an agent without the secret can no longer smoke-test the tool routes.** To call them, read the secret out of the local file at call time rather than pasting it anywhere:
 
-- **OpenRouter returns `401 User not found.`** The key in the local secrets file does not resolve to an account. Earlier it was `402 Insufficient credits`, so credits are unclaimed too. `lib/providers.ts` only falls back to the mock when a key is *absent* — a bad key present is a hard error mid-branch. PLAN.md Phase 4's comparison beat routes to OpenRouter by design, so that beat cannot work until this is fixed.
-- **`TOOL_SECRET` is empty** — `/api/health` reports `toolSecret: false`. Fine on localhost, required before the Phase 3 public deploy.
+```bash
+S=$(grep '^TOOL_SECRET=' .env.local | cut -d'"' -f2)
+curl -s localhost:3000/api/tools/fork -H "x-mahogany-secret: $S" \
+  -H 'content-type: application/json' -d '{"question":"...","session_id":"..."}' | jq
+```
 
-Next: Phase 3 voice wiring (ElevenLabs dashboard + Vercel deploy, both operator-side), then Phase 4's proof beat once OpenRouter resolves.
+**Never re-run `cp .env.example .env.local`.** It overwrites a filled file with placeholders, which cost this lane a Phase 1 re-verify. Open the existing file to edit it. If it was written in TextEdit, confirm Smart Quotes was off — curly quotes become part of the value and read as an invalid key.
+
+`npm run atlas:reset` clears the branch tree so the stage opens on a bare trunk, keeping seeded insights and routing evidence. `-- --all` clears those too and forces a re-seed plus another embedding wait.
+
+Next: Phase 3 voice wiring (ElevenLabs dashboard + Vercel deploy, both operator-side), then Phase 4's proof beat — new session, adjacent question, confirm a recalled fact with its source, then a comparison question that should route to OpenRouter and cite evidence.

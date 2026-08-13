@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "atlas:setup": "node --env-file=.env.local scripts/setup-atlas.mjs",
     "atlas:seed": "node --env-file=.env.local scripts/seed.mjs",
+    "atlas:reset": "node --env-file=.env.local scripts/reset-demo.mjs",
     "providers:check": "node --env-file=.env.local scripts/check-providers.mjs"
   },
   "dependencies": {
